@@ -2,7 +2,6 @@ import heapq
 from os import name
 from types import NoneType
 
-
 class Node:
     def __init__(self, board, cost, tiles_order, prev_node=None):
         self.board = board
@@ -41,47 +40,51 @@ def move_cost(tile, direction):
             return 1
 
 
-def get_neighbors(node):
+def get_neighbors(node, tile):
     neighbors = []
     for i in range(3):
         for j in range(3):
-            if node.board[i][j] == '.':
+            if node.board[i][j] == tile:
                 # Try moving a tile to the left
                 if j > 0:
                     board = [row[:] for row in node.board]
-                    board[i][j] = board[i][j - 1]
-                    board[i][j - 1] = '.'
-                    cost = move_cost(board[i][j], 'left')
-                    tiles_order = [row[:] for row in node.tiles_order]
-                    if cost != None:
-                      neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                    if board[i][j-1] == "." :
+                      board[i][j] = board[i][j - 1]
+                      board[i][j - 1] = tile
+                      cost = move_cost(tile, 'left')
+                      tiles_order = [row[:] for row in node.tiles_order]
+                      if cost != None:
+                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
                 # Try moving a tile to the right
                 if j < 2:
                     board = [row[:] for row in node.board]
-                    board[i][j] = board[i][j + 1]
-                    board[i][j + 1] = '.'
-                    cost = move_cost(board[i][j], 'right')
-                    tiles_order = [row[:] for row in node.tiles_order]
-                    if cost != None:
-                      neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                    if board[i][j+1] == "." :
+                      board[i][j] = board[i][j + 1]
+                      board[i][j + 1] = tile
+                      cost = move_cost(tile, 'right')
+                      tiles_order = [row[:] for row in node.tiles_order]
+                      if cost != None:
+                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
                 # Try moving a tile up
                 if i > 0:
                     board = [row[:] for row in node.board]
-                    board[i][j] = board[i - 1][j]
-                    board[i - 1][j] = '.'
-                    cost = move_cost(board[i][j], 'up')
-                    tiles_order = [row[:] for row in node.tiles_order]
-                    if cost != None:
-                      neighbors.append(Node(board, node.cost + cost, tiles_order,node))
+                    if board[i-1][j] == "." :
+                      board[i][j] = board[i - 1][j]
+                      board[i - 1][j] = tile
+                      cost = move_cost(tile, 'up')
+                      tiles_order = [row[:] for row in node.tiles_order]
+                      if cost != None:
+                        neighbors.append(Node(board, node.cost + cost, tiles_order,node))
                 # Try moving a tile down
                 if (i < 2):
                     board = [row[:] for row in node.board]
-                    board[i][j] = board[i + 1][j]
-                    board[i + 1][j] = '.'
-                    cost = move_cost(board[i][j], 'down')
-                    tiles_order = [row[:] for row in node.tiles_order]
-                    if cost!=None:
-                      neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                    if board[i+1][j] == "." :
+                      board[i][j] = board[i + 1][j]
+                      board[i + 1][j] = tile
+                      cost = move_cost(tile, 'down')
+                      tiles_order = [row[:] for row in node.tiles_order]
+                      if cost!=None:
+                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
     return neighbors
 
 def uniform_cost_search(initial_board, goal_board, tiles_order):
@@ -115,13 +118,14 @@ def uniform_cost_search(initial_board, goal_board, tiles_order):
 
                 return None, expanded_nodes, max_fringe_size
 
-def a_star_search(initial_board, goal_board, tiles_order):
+def a_star_search(initial_board, goal_board, tiles_order, order):
               initial_node = Node(initial_board, 0, tiles_order)
               fringe = []
               heapq.heappush(fringe, initial_node)
               visited = set()
               expanded_nodes = 0
               max_fringe_size = 0
+              i = 3
               while fringe:
                 node = heapq.heappop(fringe)
                 if node.board == goal_board:
@@ -132,7 +136,8 @@ def a_star_search(initial_board, goal_board, tiles_order):
                 visited.add(str(node.board))
                 expanded_nodes += 1
 
-                neighbors = get_neighbors(node)
+                neighbors = get_neighbors(node,order[i%3])
+                i += 1
                 for neighbor in neighbors:
                   heapq.heappush(fringe, neighbor)
                   max_fringe_size = max(max_fringe_size, len(fringe))
@@ -179,14 +184,13 @@ def main():
           goal_board = [goalRow1, goalRow2, goalRow3]
 
           order=input("Please write an order for expansion.(For example R-G-B)")
-          order = [x for x in order]
-          tiles_order = [order,order,order]
+          tiles_order = [goalRow1,goalRow2,goalRow3]
 
           search_type = input("Enter search type uniform(1) or A*(2): ")
           if search_type == "1":
             node, expanded_nodes, max_fringe_size = uniform_cost_search(initial_board, goal_board, tiles_order)
           elif search_type=="2":
-            node, expanded_nodes, max_fringe_size = a_star_search(initial_board, goal_board, tiles_order)
+            node, expanded_nodes, max_fringe_size = a_star_search(initial_board, goal_board, tiles_order, order)
 
           print_solution(node)
           print("Expanded nodes:", expanded_nodes)
