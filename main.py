@@ -21,6 +21,15 @@ class Node:
                     distance += 1
         return distance
 
+class UNode:
+    def __init__(self, board, cost, tiles_order, prev_node=None):
+        self.board = board
+        self.cost = cost
+        self.tiles_order = tiles_order
+        self.prev_node = prev_node
+
+    def __lt__(self, other):
+        return self.cost < other.cost 
 
 def move_cost(tile, direction):
     if tile == 'R':
@@ -40,7 +49,7 @@ def move_cost(tile, direction):
             return 1
 
 
-def get_neighbors(node, tile):
+def get_neighbors(node, tile, algorithm):
     neighbors = []
     for i in range(3):
         for j in range(3):
@@ -54,7 +63,11 @@ def get_neighbors(node, tile):
                       cost = move_cost(tile, 'left')
                       tiles_order = [row[:] for row in node.tiles_order]
                       if cost != None:
-                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                        if algorithm == 1 : 
+                          neighbors.append(UNode(board, node.cost + cost, tiles_order, node))
+                        elif algorithm == 2 :
+                          neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                          
                 # Try moving a tile to the right
                 if j < 2:
                     board = [row[:] for row in node.board]
@@ -64,7 +77,10 @@ def get_neighbors(node, tile):
                       cost = move_cost(tile, 'right')
                       tiles_order = [row[:] for row in node.tiles_order]
                       if cost != None:
-                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                        if algorithm == 1 : 
+                          neighbors.append(UNode(board, node.cost + cost, tiles_order, node))
+                        elif algorithm == 2 :
+                          neighbors.append(Node(board, node.cost + cost, tiles_order, node))
                 # Try moving a tile up
                 if i > 0:
                     board = [row[:] for row in node.board]
@@ -74,7 +90,10 @@ def get_neighbors(node, tile):
                       cost = move_cost(tile, 'up')
                       tiles_order = [row[:] for row in node.tiles_order]
                       if cost != None:
-                        neighbors.append(Node(board, node.cost + cost, tiles_order,node))
+                        if algorithm == 1 : 
+                          neighbors.append(UNode(board, node.cost + cost, tiles_order, node))
+                        elif algorithm == 2 :
+                          neighbors.append(Node(board, node.cost + cost, tiles_order, node))
                 # Try moving a tile down
                 if (i < 2):
                     board = [row[:] for row in node.board]
@@ -84,19 +103,31 @@ def get_neighbors(node, tile):
                       cost = move_cost(tile, 'down')
                       tiles_order = [row[:] for row in node.tiles_order]
                       if cost!=None:
-                        neighbors.append(Node(board, node.cost + cost, tiles_order, node))
+                        if algorithm == 1 : 
+                          neighbors.append(UNode(board, node.cost + cost, tiles_order, node))
+                        elif algorithm == 2 :
+                          neighbors.append(Node(board, node.cost + cost, tiles_order, node))
     return neighbors
 
-def uniform_cost_search(initial_board, goal_board, tiles_order):
-                initial_node = Node(initial_board, 0, tiles_order)
+def uniform_cost_search(initial_board, goal_board, tiles_order, order):
+                initial_node = UNode(initial_board, 0, tiles_order)
                 fringe = []
                 heapq.heappush(fringe, initial_node)
                 visited = set()
                 expanded_nodes = 0
                 max_fringe_size = 0
+                i = 3
+                
+                print("EXPANDED NODES : \n")
+                
                 while fringe:
                   node = heapq.heappop(fringe)
                   if node.board == goal_board:
+                    expanded_nodes += 1
+                    print(node.board[0])
+                    print(node.board[1])
+                    print(node.board[2])
+                    print()
                     return node, expanded_nodes, max_fringe_size
 
                   if str(node.board) in visited:
@@ -104,8 +135,13 @@ def uniform_cost_search(initial_board, goal_board, tiles_order):
 
                   visited.add(str(node.board))
                   expanded_nodes += 1
-
-                  neighbors = get_neighbors(node)
+                  print(node.board[0])
+                  print(node.board[1])
+                  print(node.board[2])
+                  print()
+                  
+                  neighbors = get_neighbors(node,order[i%3], 1)
+                  i += 1
                   for neighbor in neighbors:
                     heapq.heappush(fringe, neighbor)
                     max_fringe_size = max(max_fringe_size, len(fringe))
@@ -126,17 +162,30 @@ def a_star_search(initial_board, goal_board, tiles_order, order):
               expanded_nodes = 0
               max_fringe_size = 0
               i = 3
+              
+              print("EXPANDED NODES : \n")
+              
               while fringe:
                 node = heapq.heappop(fringe)
                 if node.board == goal_board:
+                  expanded_nodes += 1
+                  print(node.board[0])
+                  print(node.board[1])
+                  print(node.board[2])
+                  print()
                   return node, expanded_nodes, max_fringe_size
                 if str(node.board) in visited:
                   continue
 
                 visited.add(str(node.board))
                 expanded_nodes += 1
-
-                neighbors = get_neighbors(node,order[i%3])
+                
+                print(node.board[0])
+                print(node.board[1])
+                print(node.board[2])
+                print()
+                
+                neighbors = get_neighbors(node,order[i%3], 2)
                 i += 1
                 for neighbor in neighbors:
                   heapq.heappush(fringe, neighbor)
@@ -158,7 +207,9 @@ def print_solution(node):
           while node:
             path.append(node.board)
             node = node.prev_node
-
+          
+          print("\nPATH TO SOLUTION : \n")
+          
           for board in reversed(path):
             print(board[0])
             print(board[1])
@@ -188,7 +239,7 @@ def main():
 
           search_type = input("Enter search type uniform(1) or A*(2): ")
           if search_type == "1":
-            node, expanded_nodes, max_fringe_size = uniform_cost_search(initial_board, goal_board, tiles_order)
+            node, expanded_nodes, max_fringe_size = uniform_cost_search(initial_board, goal_board, tiles_order, order)
           elif search_type=="2":
             node, expanded_nodes, max_fringe_size = a_star_search(initial_board, goal_board, tiles_order, order)
 
