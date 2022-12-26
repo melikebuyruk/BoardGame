@@ -1,13 +1,11 @@
 import heapq
 from os import name
-from types import NoneType
-
 
 class Node:
-    def __init__(self, board, cost, tiles_order, level, prev_node=None):
+    def __init__(self, board, cost, goal_board, level, prev_node=None):
         self.board = board
         self.cost = cost
-        self.tiles_order = tiles_order
+        self.goal_board = goal_board
         self.prev_node = prev_node
         self.level = level
         self.heuristic = self.hamming_distance()
@@ -19,16 +17,16 @@ class Node:
         distance = 0
         for i in range(3):
             for j in range(3):
-                if self.board[i][j] != '.' and self.board[i][j] != self.tiles_order[i][j]:
+                if self.board[i][j] != '.' and self.board[i][j] != self.goal_board[i][j]:
                     distance += 1
         return distance
 
 
 class UNode:
-    def __init__(self, board, cost, tiles_order, level, prev_node=None):
+    def __init__(self, board, cost, goal_board, level, prev_node=None):
         self.board = board
         self.cost = cost
-        self.tiles_order = tiles_order
+        self.goal_board = goal_board
         self.level = level
         self.prev_node = prev_node
 
@@ -67,14 +65,14 @@ def get_neighbors(node, tile, algorithm):
                         board[i][j] = board[i][j - 1]
                         board[i][j - 1] = tile
                         cost = move_cost(tile, 'left')
-                        tiles_order = [row[:] for row in node.tiles_order]
+                        goal_board = [row[:] for row in node.goal_board]
                         if cost != None:
                             if algorithm == 1:
                                 neighbors.append(
-                                    UNode(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    UNode(board, node.cost + cost, goal_board, tempLevel, node))
                             elif algorithm == 2:
                                 neighbors.append(
-                                    Node(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    Node(board, node.cost + cost, goal_board, tempLevel, node))
 
                 # Try moving a tile to the right
                 if j < 2:
@@ -83,14 +81,14 @@ def get_neighbors(node, tile, algorithm):
                         board[i][j] = board[i][j + 1]
                         board[i][j + 1] = tile
                         cost = move_cost(tile, 'right')
-                        tiles_order = [row[:] for row in node.tiles_order]
+                        goal_board = [row[:] for row in node.goal_board]
                         if cost != None:
                             if algorithm == 1:
                                 neighbors.append(
-                                    UNode(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    UNode(board, node.cost + cost, goal_board, tempLevel, node))
                             elif algorithm == 2:
                                 neighbors.append(
-                                    Node(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    Node(board, node.cost + cost, goal_board, tempLevel, node))
                 # Try moving a tile up
                 if i > 0:
                     board = [row[:] for row in node.board]
@@ -98,14 +96,14 @@ def get_neighbors(node, tile, algorithm):
                         board[i][j] = board[i - 1][j]
                         board[i - 1][j] = tile
                         cost = move_cost(tile, 'up')
-                        tiles_order = [row[:] for row in node.tiles_order]
+                        goal_board = [row[:] for row in node.goal_board]
                         if cost != None:
                             if algorithm == 1:
                                 neighbors.append(
-                                    UNode(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    UNode(board, node.cost + cost, goal_board, tempLevel, node))
                             elif algorithm == 2:
                                 neighbors.append(
-                                    Node(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    Node(board, node.cost + cost, goal_board, tempLevel, node))
                 # Try moving a tile down
                 if (i < 2):
                     board = [row[:] for row in node.board]
@@ -113,19 +111,19 @@ def get_neighbors(node, tile, algorithm):
                         board[i][j] = board[i + 1][j]
                         board[i + 1][j] = tile
                         cost = move_cost(tile, 'down')
-                        tiles_order = [row[:] for row in node.tiles_order]
+                        goal_board = [row[:] for row in node.goal_board]
                         if cost != None:
                             if algorithm == 1:
                                 neighbors.append(
-                                    UNode(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    UNode(board, node.cost + cost, goal_board, tempLevel, node))
                             elif algorithm == 2:
                                 neighbors.append(
-                                    Node(board, node.cost + cost, tiles_order, tempLevel, node))
+                                    Node(board, node.cost + cost, goal_board, tempLevel, node))
     return neighbors
 
 
-def uniform_cost_search(initial_board, goal_board, tiles_order, order):
-    initial_node = UNode(initial_board, 0, tiles_order, 3)
+def uniform_cost_search(initial_board, goal_board, order):
+    initial_node = UNode(initial_board, 0, goal_board, 3)
     fringe = []
     heapq.heappush(fringe, initial_node)
     visited = set()
@@ -168,8 +166,8 @@ def uniform_cost_search(initial_board, goal_board, tiles_order, order):
     return None, expanded_nodes, max_fringe_size
 
 
-def a_star_search(initial_board, goal_board, tiles_order, order):
-    initial_node = Node(initial_board, 0, tiles_order, 3)
+def a_star_search(initial_board, goal_board, order):
+    initial_node = Node(initial_board, 0, goal_board, 3)
     fringe = []
     heapq.heappush(fringe, initial_node)
     visited = set()
@@ -251,15 +249,15 @@ def main():
 
     order = input("Please write an order for expansion.(For example RGB)")
 
-    tiles_order = [goalRow1, goalRow2, goalRow3]
+    goal_board = [goalRow1, goalRow2, goalRow3]
 
     search_type = input("Enter search type uniform(1) or A*(2): ")
     if search_type == "1":
         node, expanded_nodes, max_fringe_size = uniform_cost_search(
-            initial_board, goal_board, tiles_order, order)
+            initial_board, goal_board, order)
     elif search_type == "2":
         node, expanded_nodes, max_fringe_size = a_star_search(
-            initial_board, goal_board, tiles_order, order)
+            initial_board, goal_board, order)
 
     print_solution(node)
     print("Expanded nodes:", expanded_nodes)
